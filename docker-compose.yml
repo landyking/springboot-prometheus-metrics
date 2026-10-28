@@ -1,0 +1,81 @@
+x-app: &app
+    build: .
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m -XX:+UseG1GC"
+    mem_limit: 384m
+    restart: unless-stopped
+
+services:
+  app-1:
+    <<: *app
+    container_name: metrics-demo-app-1
+    ports:
+      - "8081:8080"
+
+  app-2:
+    <<: *app
+    container_name: metrics-demo-app-2
+    ports:
+      - "8082:8080"
+
+  load-balancer:
+    image: nginx:1.29-alpine
+    container_name: metrics-demo-load-balancer
+    volumes:
+      - ./monitoring/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      - app-1
+      - app-2
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.7.3
+    container_name: metrics-demo-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - app-1
+      - app-2
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.2.1
+    container_name: metrics-demo-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  load-generator:
+    image: python:3.13-alpine
+    container_name: metrics-demo-load-generator
+    command: ["python", "/scripts/generate_load.py"]
+    environment:
+      BASE_URL: http://load-balancer:8080
+      CYCLE_SECONDS: "60"
+    volumes:
+      - ./scripts:/scripts:ro
+    depends_on:
+      - load-balancer
+    restart: unless-stopped
+
+volumes:
+  prometheus-data:
+  grafana-data:

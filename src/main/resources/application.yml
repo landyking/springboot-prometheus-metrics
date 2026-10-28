@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: metrics-demo
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      slo:
+        http.server.requests: 50ms,100ms,250ms,500ms,1s
+
+info:
+  application:
+    name: ${spring.application.name}
+    purpose: Learn Spring Boot Actuator, Prometheus, and Grafana

@@ -1,0 +1,152 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "reqps"}},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}},
+      "targets": [{"expr": "sum by (instance, uri, method) (rate(http_server_requests_seconds_count{application=\"metrics-demo\",instance=~\"$instance\",uri=~\"/api/.*\"}[1m]))", "legendFormat": "{{instance}} {{method}} {{uri}}", "refId": "A"}],
+      "title": "API request rate (peaks and troughs)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "id": 2,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}},
+      "targets": [{"expr": "histogram_quantile(0.95, sum by (le, instance, uri) (rate(http_server_requests_seconds_bucket{application=\"metrics-demo\",instance=~\"$instance\",uri=~\"/api/.*\"}[2m])))", "legendFormat": "{{instance}} p95 {{uri}}", "refId": "A"}],
+      "title": "95th percentile response time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1}},
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8},
+      "id": 3,
+      "targets": [{"expr": "sum by (instance) (rate(http_server_requests_seconds_count{application=\"metrics-demo\",instance=~\"$instance\",status=~\"5..\"}[2m])) / clamp_min(sum by (instance) (rate(http_server_requests_seconds_count{application=\"metrics-demo\",instance=~\"$instance\"}[2m])), 0.001)", "legendFormat": "{{instance}} 5xx ratio", "refId": "A"}],
+      "title": "Server error ratio",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "bytes"}},
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 8},
+      "id": 4,
+      "targets": [
+        {"expr": "sum by (instance) (jvm_memory_used_bytes{application=\"metrics-demo\",instance=~\"$instance\",area=\"heap\"})", "legendFormat": "{{instance}} used", "refId": "A"},
+        {"expr": "sum by (instance) (jvm_memory_max_bytes{application=\"metrics-demo\",instance=~\"$instance\",area=\"heap\"})", "legendFormat": "{{instance}} max", "refId": "B"}
+      ],
+      "title": "JVM heap memory",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "ops"}},
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 8},
+      "id": 5,
+      "targets": [{"expr": "sum by (instance, result) (rate(demo_orders_total{application=\"metrics-demo\",instance=~\"$instance\"}[2m]))", "legendFormat": "{{instance}} {{result}}", "refId": "A"}],
+      "title": "Custom order outcomes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "Bps"}},
+      "gridPos": {"h": 8, "w": 6, "x": 0, "y": 16},
+      "id": 6,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}},
+      "targets": [
+        {"expr": "sum by (instance) (rate(jvm_gc_memory_allocated_bytes_total{application=\"metrics-demo\",instance=~\"$instance\"}[1m]))", "legendFormat": "{{instance}} JVM", "refId": "A"},
+        {"expr": "sum by (instance) (rate(demo_memory_allocated_bytes_total{application=\"metrics-demo\",instance=~\"$instance\"}[1m]))", "legendFormat": "{{instance}} pressure API", "refId": "B"}
+      ],
+      "title": "Memory allocation rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0}},
+      "gridPos": {"h": 8, "w": 6, "x": 6, "y": 16},
+      "id": 7,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}},
+      "targets": [{"expr": "sum by (instance) (increase(jvm_gc_pause_seconds_count{application=\"metrics-demo\",instance=~\"$instance\"}[1m]))", "legendFormat": "{{instance}} collections", "refId": "A"}],
+      "title": "GC events in the last minute",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "bytes", "min": 0, "max": 83886080}},
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 16},
+      "id": 8,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}},
+      "targets": [{"expr": "demo_memory_retained_bytes{application=\"metrics-demo\",instance=~\"$instance\"}", "legendFormat": "{{instance}} retained", "refId": "A"}],
+      "title": "Retained memory (80 MiB limit)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s", "min": 0}},
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 16},
+      "id": 9,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}},
+      "targets": [{"expr": "sum by (instance) (increase(jvm_gc_pause_seconds_sum{application=\"metrics-demo\",instance=~\"$instance\"}[1m]))", "legendFormat": "{{instance}} pause seconds", "refId": "A"}],
+      "title": "GC pause time in the last minute",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Long-lived heap memory remaining after garbage collection. A steadily rising floor can indicate a memory leak.",
+      "fieldConfig": {"defaults": {"unit": "bytes", "min": 0}},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+      "id": 10,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}},
+      "targets": [
+        {"expr": "jvm_gc_live_data_size_bytes{application=\"metrics-demo\",instance=~\"$instance\"}", "legendFormat": "{{instance}} live after GC", "refId": "A"},
+        {"expr": "jvm_gc_max_data_size_bytes{application=\"metrics-demo\",instance=~\"$instance\"}", "legendFormat": "{{instance}} old-gen capacity", "refId": "B"}
+      ],
+      "title": "After-GC live data",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Live data divided by the maximum long-lived heap size. Compare the floor after successive GC cycles.",
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 60}, {"color": "red", "value": 80}]}}},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+      "id": 11,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}},
+      "targets": [{"expr": "100 * jvm_gc_live_data_size_bytes{application=\"metrics-demo\",instance=~\"$instance\"} / clamp_min(jvm_gc_max_data_size_bytes{application=\"metrics-demo\",instance=~\"$instance\"}, 1)", "legendFormat": "{{instance}} live set", "refId": "A"}],
+      "title": "After-GC live-set percentage",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 41,
+  "tags": ["spring-boot", "actuator", "prometheus"],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {"selected": true, "text": ["All"], "value": ["$__all"]},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "definition": "label_values(up{job=\"spring-boot\"}, instance)",
+        "includeAll": true,
+        "multi": true,
+        "name": "instance",
+        "options": [],
+        "query": {"query": "label_values(up{job=\"spring-boot\"}, instance)", "refId": "PrometheusVariableQueryEditor-VariableQuery"},
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {"from": "now-15m", "to": "now"},
+  "timezone": "browser",
+  "title": "Spring Boot Metrics Overview",
+  "uid": "spring-boot-metrics",
+  "version": 3
+}

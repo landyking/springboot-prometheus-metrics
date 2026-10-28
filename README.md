@@ -103,5 +103,5 @@ capacity:
 
 ```promql
 jvm_gc_live_data_size_bytes
-100 * jvm_gc_live_data_size_bytes / clamp_min(jvm_gc_max_data_size_bytes, 1)
+jvm_memory_usage_after_gc{area="heap",pool="long-lived"}
 ```

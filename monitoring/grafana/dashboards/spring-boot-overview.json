@@ -28,7 +28,7 @@
       "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1}},
       "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8},
       "id": 3,
-      "targets": [{"expr": "sum by (instance) (rate(http_server_requests_seconds_count{application=\"metrics-demo\",instance=~\"$instance\",status=~\"5..\"}[2m])) / clamp_min(sum by (instance) (rate(http_server_requests_seconds_count{application=\"metrics-demo\",instance=~\"$instance\"}[2m])), 0.001)", "legendFormat": "{{instance}} 5xx ratio", "refId": "A"}],
+      "targets": [{"expr": "sum by (instance) (rate(http_server_requests_seconds_count{application=\"metrics-demo\",instance=~\"$instance\",uri=~\"/api/.*\",status=~\"5..\"}[2m])) / clamp_min(sum by (instance) (rate(http_server_requests_seconds_count{application=\"metrics-demo\",instance=~\"$instance\",uri=~\"/api/.*\"}[2m])), 0.001)", "legendFormat": "{{instance}} 5xx ratio", "refId": "A"}],
       "title": "Server error ratio",
       "type": "timeseries"
     },
@@ -39,7 +39,7 @@
       "id": 4,
       "targets": [
         {"expr": "sum by (instance) (jvm_memory_used_bytes{application=\"metrics-demo\",instance=~\"$instance\",area=\"heap\"})", "legendFormat": "{{instance}} used", "refId": "A"},
-        {"expr": "sum by (instance) (jvm_memory_max_bytes{application=\"metrics-demo\",instance=~\"$instance\",area=\"heap\"})", "legendFormat": "{{instance}} max", "refId": "B"}
+        {"expr": "sum by (instance) (clamp_min(jvm_memory_max_bytes{application=\"metrics-demo\",instance=~\"$instance\",area=\"heap\"}, 0))", "legendFormat": "{{instance}} max", "refId": "B"}
       ],
       "title": "JVM heap memory",
       "type": "timeseries"
@@ -112,13 +112,13 @@
     },
     {
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "description": "Live data divided by the maximum long-lived heap size. Compare the floor after successive GC cycles.",
-      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 60}, {"color": "red", "value": 80}]}}},
+      "description": "Direct Micrometer measurement of long-lived heap usage after the most recent garbage collection.",
+      "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.6}, {"color": "red", "value": 0.8}]}}},
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
       "id": 11,
       "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}},
-      "targets": [{"expr": "100 * jvm_gc_live_data_size_bytes{application=\"metrics-demo\",instance=~\"$instance\"} / clamp_min(jvm_gc_max_data_size_bytes{application=\"metrics-demo\",instance=~\"$instance\"}, 1)", "legendFormat": "{{instance}} live set", "refId": "A"}],
-      "title": "After-GC live-set percentage",
+      "targets": [{"expr": "jvm_memory_usage_after_gc{application=\"metrics-demo\",instance=~\"$instance\",area=\"heap\",pool=\"long-lived\"}", "legendFormat": "{{instance}} after GC", "refId": "A"}],
+      "title": "After-GC memory usage",
       "type": "timeseries"
     }
   ],
@@ -148,5 +148,5 @@
   "timezone": "browser",
   "title": "Spring Boot Metrics Overview",
   "uid": "spring-boot-metrics",
-  "version": 3
+  "version": 5
 }
